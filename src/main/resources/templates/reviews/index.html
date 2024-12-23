@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <div th:replace="~{fragment :: meta}"></div>
+
+    <div th:replace="~{fragment :: styles}"></div>
+
+    <title>レビュー</title>
+</head>
+<body>
+    <div class="samuraitravel-wrapper">
+        <div th:replace="~{fragment :: header}"></div>
+
+        <main>
+            <!-- レビューの削除用モーダル -->
+            <div class="modal fade" id="deleteReviewModal" tabindex="-1" aria-labelledby="deleteReviewModalLabel">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteReviewModalLabel">レビューを削除してもよろしいですか？</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                        </div>
+                        <div class="modal-footer">
+                            <form method="post" action="" name="deleteReviewForm">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn text-white shadow-sm samuraitravel-btn-danger">削除</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container samuraitravel-container pb-5">
+                <div class="row justify-content-center">
+                    <div class="col-xxl-6 col-xl-7 col-lg-8 col-md-10">
+                        <nav class="my-3" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/houses}">民宿一覧</a></li>
+                                <!-- house.id を使って詳細ページへのリンクを設定 -->
+                                <li class="breadcrumb-item"><a th:href="@{/houses/{houseId}(houseId=${house.id})}">民宿詳細</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">レビュー</li>
+                            </ol>
+                        </nav>
+
+                        <h1 class="mb-2 text-center" th:text="${house.name}"></h1>
+
+                        <p class="text-center">
+                            <!-- 平均スコアの表示 -->
+                            <th:block th:with="roundedScore=${T(java.lang.Math).round(house.getAverageScore() * 2.0)}">
+                                <span class="samuraitravel-star-rating me-1" th:data-rate="${#numbers.formatDecimal(roundedScore / 2.0, 1, 'COMMA', 1, 'POINT')}"></span>
+                            </th:block>
+                            <span th:text="${#numbers.formatDecimal(house.getAverageScore(), 1, 'COMMA', 2, 'POINT')}"></span>
+                            <span th:text="${'（' + house.reviews.size() + '件）'}"></span>
+                        </p>
+
+                        <div th:if="${successMessage}" class="alert alert-info">
+                            <span th:text="${successMessage}"></span>
+                        </div>
+
+                        <ul class="nav nav-tabs mb-3">
+                            <li class="nav-item">
+                                <!-- house.id を使ってトップページへのリンクを設定 -->
+                                <a class="nav-link link-dark" th:href="@{/houses/{houseId}(houseId=${house.id})}">トップ</a>
+                            </li>
+                            <li class="nav-item">
+                                <!-- active タブのリンクを reviews ページに設定 -->
+                                <a class="nav-link active text-white samuraitravel-bg" aria-current="page" th:href="@{/houses/{houseId}/reviews(houseId=${house.id})}">レビュー</a>
+                            </li>
+                        </ul>
+
+                        <!-- レビューがない場合のメッセージ表示 -->
+                        <div th:if="${reviewPage.totalPages == 0}" class="mb-3">
+                            <p class="text-center">まだレビューがありません。</p>
+                        </div>
+
+                        <!-- レビュー一覧表示 -->
+                        <div th:unless="${reviewPage.totalPages == 0}" class="card mb-3" th:each="review : ${reviewPage.content}">
+                            <div class="card-header d-flex justify-content-between">
+                                <div th:text="${review.user.name + 'さん'}"></div>
+                                <!-- ユーザーがレビュー投稿者と一致する場合、編集と削除リンクを表示 -->
+                                <div th:if="${#authentication.principal.user.id == review.user.id}">
+                                    <a th:href="@{/houses/{houseId}/reviews/{reviewId}/edit(houseId=${house.id}, reviewId=${review.id})}" class="me-2">編集</a>
+                                    <a href="#" class="link-secondary" data-bs-toggle="modal" data-bs-target="#deleteReviewModal" th:data-house-id="${house.id}" th:data-review-id="${review.id}">削除</a>
+                                </div>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <span class="samuraitravel-star-rating" th:data-rate="${review.score + '.0'}"></span>
+                                </li>
+                                <li class="list-group-item" th:text="${review.content}"></li>
+                            </ul>
+                        </div>
+
+                        <!-- ページネーション -->
+                        <div th:if="${userRoleName.equals('ROLE_PAID_MEMBER') && reviewPage.totalPages > 1}" class="d-flex justify-content-center">
+                            <nav aria-label="レビューページ">
+                                <ul class="pagination">
+                                    <li class="page-item">
+                                        <span th:if="${reviewPage.isFirst()}" class="page-link disabled">‹</span>
+                                        <a th:unless="${reviewPage.isFirst()}" th:href="@{/houses/{houseId}/reviews(page=${reviewPage.number - 1}, houseId=${house.id})}" class="page-link samuraitravel-page-link">‹</a>
+                                    </li>
+                                    <li th:each="i : ${#numbers.sequence(0, reviewPage.totalPages - 1)}" class="page-item">
+                                        <span th:if="${i == reviewPage.number}" class="page-link active samuraitravel-active" th:text="${i + 1}"></span>
+                                        <a th:unless="${i == reviewPage.number}" th:href="@{/houses/{houseId}/reviews(page=${i}, houseId=${house.id})}" class="page-link samuraitravel-page-link" th:text="${i + 1}"></a>
+                                    </li>
+                                    <li class="page-item">
+                                        <span th:if="${reviewPage.isLast()}" class="page-link disabled">›</span>
+                                        <a th:unless="${reviewPage.isLast()}" th:href="@{/houses/{houseId}/reviews(page=${reviewPage.number + 1}, houseId=${house.id})}" class="page-link samuraitravel-page-link">›</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+
+                        <!-- 無料ユーザー用の案内 -->
+                        <div th:if="${userRoleName.equals('ROLE_FREE_MEMBER') && reviewPage.totalElements > 3}" class="text-center">
+                            <p>レビューを全件表示するには<a th:href="@{/subscription/register}">有料プランへの登録</a>が必要です。</p>
+                        </div>
+
+                        <!-- 有料ユーザーが未レビューの場合の投稿リンク -->
+                        <div th:if="${userRoleName.equals('ROLE_PAID_MEMBER') && !hasUserAlreadyReviewed}" class="text-center mt-3">
+                            <a th:href="@{/houses/{houseId}/reviews/register(houseId=${house.id})}" class="btn text-white shadow-sm w-50 samuraitravel-btn">レビューを投稿する</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div th:replace="~{fragment :: footer}"></div>
+    </div>
+
+    <div th:replace="~{fragment :: scripts}"></div>
+    <script th:src="@{/js/review-modal.js}"></script>
+</body>
+</html>
