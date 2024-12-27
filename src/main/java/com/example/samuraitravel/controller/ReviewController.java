@@ -22,7 +22,6 @@ import com.example.samuraitravel.form.ReviewRegisterForm;
 import com.example.samuraitravel.security.UserDetailsImpl;
 import com.example.samuraitravel.service.HouseService;
 import com.example.samuraitravel.service.ReviewService;
-import com.example.samuraitravel.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -32,41 +31,12 @@ public class ReviewController {
 	 
 	private final ReviewService reviewService;
 	private HouseService houseService;
-	private UserService userService;
 	
-	public ReviewController(ReviewService reviewService, HouseService houseService, UserService userService) {
+	
+	public ReviewController(ReviewService reviewService, HouseService houseService) {
 		this.reviewService = reviewService;
 		this.houseService = houseService;
-		this.userService = userService;
 	}
-
-//@GetMapping
-//public String index(@PathVariable(name = "houseId") Integer houseId, Principal principal, Model model) {	
-//	
-//	 // 民宿情報を取得
-//	House house = houseService.findHouseById(houseId);
-//	if (house == null) {
-//		model.addAttribute("errorMessage", "民宿が存在しません。");
-//		return "redirect:/houses/index";
-//	}
-//	
-//	//民宿ごとの全レビューを取得
-//	List<Review> reviews = reviewService.findAllReviewsByHouse(house);
-//	
-//	//ログイン中のユーザーのロール名を取得
-//	String userRoleName = userService.getUserRoleName(principal.getName());
-//	
-//	//ユーザーがレビューを投稿済みか確認
-//	User currentUser = userService.findByName(principal.getName());
-//	boolean hasUserAlreadyReviewed = reviewService.hasUserAlreadyReviewed(house, currentUser);
-//	
-//	model.addAttribute("house", house);
-//	model.addAttribute("userRoleName", userRoleName);
-//	model.addAttribute("reviews", reviews);
-//	model.addAttribute("hasUserAlreadyReviewed", hasUserAlreadyReviewed);
-//	
-//	return "houses/show";
-//}
 
 @GetMapping("/register")
 public String register(@PathVariable(name = "houseId") Integer houseId, RedirectAttributes redirectAttributes, Principal principal, Model model) {
@@ -106,66 +76,75 @@ public String create(@PathVariable(name = "houseId") Integer houseId, @ModelAttr
 }
 
 @GetMapping("/{reviewId}/edit")
-public String edit(@PathVariable(name = "houseId") Integer houseId, @PathVariable(name = "reviewId") Integer reviewId, Model model, Principal principal) {
+public String edit(@PathVariable(name = "houseId") Integer houseId, @PathVariable(name = "reviewId") Integer reviewId, Model model, @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
 	
-	User user = userService.findByName(principal.getName());
-	House house = houseService.findHouseById(houseId);
-	Review review = reviewService.findReviewById(reviewId);
-	
-	if (house == null || !reviewService.existsReviewsForHouse(house)) {
+	User user = userDetailsImpl.getUser();
+    House house = houseService.findHouseById(houseId);
+    Review review = reviewService.findReviewById(reviewId);
+
+    if (house == null || review == null || !review.getHouse().getId().equals(houseId)) {
         model.addAttribute("errorMessage", "指定されたページが見つかりません。");
         return "redirect:/houses/index";
-	}
-	
-	if (!review.getHouse().getId().equals(houseId) || !review.getUser().getId().equals(user.getId())) {
-		model.addAttribute("errorMessage", "不正なアクセスです。");
-	}
-	
-	return "reviews/edit";
+    }
+
+    if (!review.getUser().getId().equals(user.getId())) {
+        model.addAttribute("errorMessage", "不正なアクセスです。");
+        return "redirect:/houses/" + houseId + "/reviews";
+    }
+
+    ReviewEditForm reviewEditForm = new ReviewEditForm(review.getRating(), review.getContent());
+
+    model.addAttribute("house", house);
+    model.addAttribute("review", review);
+    model.addAttribute("reviewEditForm", reviewEditForm);
+
+    return "reviews/edit";
 }
 
 @PostMapping("/{reviewId}/update")
-public String update(@PathVariable(name = "houseId") Integer houseId, @PathVariable(name = "reviewId") Integer reviewId, @Valid ReviewEditForm reviewEditForm,BindingResult bindingResult, Model model, Principal principal) {
-	User user = userService.findByName(principal.getName());
+public String update(@PathVariable(name = "houseId") Integer houseId, @PathVariable(name = "reviewId") Integer reviewId, @Valid ReviewEditForm reviewEditForm,BindingResult bindingResult,RedirectAttributes redirectAttributes, Model model, @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+	User user = userDetailsImpl.getUser();
 	House house = houseService.findHouseById(houseId);
 	Review review = reviewService.findReviewById(reviewId);
+	
+	if (house == null || review == null || !review.getHouse().getId().equals(houseId)) {
+        model.addAttribute("errorMessage", "指定されたページが見つかりません。");
+        return "redirect:/houses/index";
+    }
+	
+	if (!review.getHouse().getId().equals(houseId) || !review.getUser().getId().equals(user.getId())) {
+		model.addAttribute("errorMessage", "不正なアクセスです。");
+	}
 	
 	if (bindingResult.hasErrors()) {
-		return "reviews/edit";
-	}
+        model.addAttribute("house", house);
+        model.addAttribute("review", review);
+        model.addAttribute("reviewEditForm", reviewEditForm);
+
+        return "reviews/edit";
+    }
+
+    reviewService.updateReview(reviewEditForm, review);
+    redirectAttributes.addFlashAttribute("successMessage", "レビューを編集しました。");
 	
-	if (house == null || !reviewService.existsReviewsForHouse(house)) {
-        model.addAttribute("errorMessage", "指定されたページが見つかりません。");
-        return "redirect:/houses/index";
-	}
-	
-	if (!review.getHouse().getId().equals(houseId) || !review.getUser().getId().equals(user.getId())) {
-		model.addAttribute("errorMessage", "不正なアクセスです。");
-	}
-	
-	reviewService.updateReview(reviewId, reviewEditForm.getContent(), reviewEditForm.getRating());
-	
-	return "redirect:/houses/" + houseId+ "/reviews";
+	return "redirect:/houses/" + houseId;
 }
 
-@PostMapping("/{reviewId}/delete")
-public String delete(@PathVariable(name = "houseId") Integer houseId, @PathVariable(name = "reviewId") Integer reviewId, @Valid ReviewEditForm reviewEditForm, Model model, Principal principal) {
-	User user = userService.findByName(principal.getName());
-	House house = houseService.findHouseById(houseId);
-	Review review = reviewService.findReviewById(reviewId);
-	
-	if (house == null || !reviewService.existsReviewsForHouse(house)) {
-        model.addAttribute("errorMessage", "指定されたページが見つかりません。");
-        return "redirect:/houses/index";
-	}
-	
-	if (!review.getHouse().getId().equals(houseId) || !review.getUser().getId().equals(user.getId())) {
-		model.addAttribute("errorMessage", "不正なアクセスです。");
-	}
-	
-	reviewService.deleteReview(reviewId);
-	
-	return "redirect:houses/" + houseId+ "/reviews";
+@GetMapping("/{reviewId}/delete")
+public String delete(@PathVariable(name = "houseId") Integer houseId, @PathVariable(name = "reviewId") Integer reviewId, @AuthenticationPrincipal UserDetailsImpl userDetailsImpl, RedirectAttributes redirectAttributes) {
+	User user = userDetailsImpl.getUser();
+    House house = houseService.findHouseById(houseId);
+    Review review = reviewService.findReviewById(reviewId);
+
+    if (house == null || review == null || !review.getHouse().getId().equals(houseId) || !review.getUser().getId().equals(user.getId())) {
+        redirectAttributes.addFlashAttribute("errorMessage", "不正なアクセスです。");
+        return "redirect:/houses/" + houseId;
+    }
+
+    reviewService.deleteReview(review);
+    redirectAttributes.addFlashAttribute("successMessage", "レビューを削除しました。");
+
+    return "redirect:/houses/" + houseId;
 }
 }
 

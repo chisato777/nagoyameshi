@@ -17,6 +17,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 	public Review findFirstReviewByOrderByIdDesc();
 	public Review findByHouseAndUser(House house, User user);
 	public Review findReviewById(Integer id);
-	boolean existsByHouse(House house);
+	boolean existsByHouseAndUser(House house, User user);
 	
 }

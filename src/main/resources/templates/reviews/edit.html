@@ -8,69 +8,49 @@
         <title>レビュー編集</title>
     </head>
     <body>
-        <div class="nagoyameshi-wrapper">
+        <div class="samuraitravel-wrapper">
             <div th:replace="~{fragment :: header}"></div>
 
             <main>
-                <div class="container nagoyameshi-container pb-5">
+                <div class="container samuraitravel-container pb-5">
                     <div class="row justify-content-center">
                         <div class="col-xxl-6 col-xl-7 col-lg-8 col-md-10">
                             <nav class="my-3" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
                                 <ol class="breadcrumb mb-0">
                                     <li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>
-                                    <li class="breadcrumb-item"><a th:href="@{/restaurants}">店舗一覧</a></li>
-                                    <li class="breadcrumb-item"><a th:href="@{/restaurants/__${restaurant.id}__}">店舗詳細</a></li>
-                                    <li class="breadcrumb-item"><a th:href="@{/restaurants/__${restaurant.id}__/reviews}">レビュー</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/houses}">店舗一覧</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/houses/__${house.id}__}">店舗詳細</a></li>
                                     <li class="breadcrumb-item active" aria-current="page">レビュー編集</li>
                                 </ol>
                             </nav>
 
-                            <h1 class="mb-2 text-center" th:text="${restaurant.name}"></h1>
+                            <h1 class="mb-2 text-center" th:text="${house.name}"></h1>
 
-                            <p class="text-center">
-                                <th:block th:with="roundedScore=${T(java.lang.Math).round(restaurant.getAverageScore() * 2.0)}">
-                                    <span class="nagoyameshi-star-rating me-1" th:data-rate="${#numbers.formatDecimal(roundedScore / 2.0, 1, 'COMMA', 1, 'POINT')}"></span>
-                                </th:block>
-                                <span th:text="${#numbers.formatDecimal(restaurant.getAverageScore(), 1, 'COMMA', 2, 'POINT')}"></span><span th:text="${'（' + restaurant.reviews.size() + '件）'}"></span>
-                            </p>
-
-                            <ul class="nav nav-tabs mb-3">
-                                <li class="nav-item">
-                                    <a class="nav-link link-dark" th:href="@{/restaurants/__${restaurant.id}__}">トップ</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link link-dark" th:href="@{/restaurants/__${restaurant.id}__/reservations/register}">予約</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link active text-white nagoyameshi-bg" aria-current="page" th:href="@{/restaurants/__${restaurant.id}__/reviews}">レビュー</a>
-                                </li>
-                            </ul>
-
-                            <form th:method="post" th:action="@{/restaurants/__${restaurant.id}__/reviews/__${review.id}__/update}" th:object="${reviewEditForm}">
+                            <form th:method="post" th:action="@{/houses/__${house.id}__/reviews/__${review.id}__/update}" th:object="${reviewEditForm}">
                                 <div class="mb-3">
                                     <label class="form-label text-md-left fw-bold">評価</label>
-                                    <div th:if="${#fields.hasErrors('score')}" class="text-danger small mb-2" th:errors="*{score}"></div>
+                                    <div th:if="${#fields.hasErrors('rating')}" class="text-danger small mb-2" th:errors="*{rating}"></div>
 
                                     <div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" id="score1" type="radio" value="1" th:field="*{score}">
-                                            <label class="form-check-label" for="score1">1</label>
+                                            <input class="form-check-input" id="rating1" type="radio" value="1" th:field="*{rating}" th:checked="${reviewEditForm.rating == 1}">
+                                            <label class="form-check-label" for="rating1">1</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" id="score2" type="radio" value="2" th:field="*{score}">
-                                            <label class="form-check-label" for="score2">2</label>
+                                            <input class="form-check-input" id="rating2" type="radio" value="2" th:field="*{rating}" th:checked="${reviewEditForm.rating == 2}">
+                                            <label class="form-check-label" for="rating2">2</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" id="score3" type="radio" value="3" th:field="*{score}">
-                                            <label class="form-check-label" for="score3">3</label>
+                                            <input class="form-check-input" id="rating3" type="radio" value="3" th:field="*{rating}" th:checked="${reviewEditForm.rating == 3}">
+                                            <label class="form-check-label" for="rating3">3</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" id="score4" type="radio" value="4" th:field="*{score}">
-                                            <label class="form-check-label" for="score4">4</label>
+                                            <input class="form-check-input" id="rating4" type="radio" value="4" th:field="*{rating}" th:checked="${reviewEditForm.rating == 4}">
+                                            <label class="form-check-label" for="rating4">4</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" id="score5" type="radio" value="5" th:field="*{score}">
-                                            <label class="form-check-label" for="score5">5</label>
+                                            <input class="form-check-input" id="rating5" type="radio" value="5" th:field="*{rating}" th:checked="${reviewEditForm.rating == 5}">
+                                            <label class="form-check-label" for="rating5">5</label>
                                         </div>
                                     </div>
                                 </div>
@@ -85,7 +65,7 @@
                                 </div>
 
                                 <div class="form-group d-flex justify-content-center mb-4">
-                                    <button type="submit" class="btn text-white shadow-sm w-50 nagoyameshi-btn">更新</button>
+                                    <button type="submit" class="btn text-white shadow-sm samuraitravel-btn">レビューを更新する</button>
                                 </div>
                             </form>
                         </div>

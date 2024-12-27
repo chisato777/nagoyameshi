@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.samuraitravel.entity.House;
 import com.example.samuraitravel.entity.Review;
 import com.example.samuraitravel.entity.User;
+import com.example.samuraitravel.form.ReviewEditForm;
 import com.example.samuraitravel.form.ReviewRegisterForm;
 import com.example.samuraitravel.repository.ReviewRepository;
 
@@ -49,32 +50,20 @@ public class ReviewService {
     	reviewRepository.save(review);
     }
     
-    public Review updateReview(Integer reviewId, String newContent, int newRating) {
-    	
-    	Review review = reviewRepository.findReviewById(reviewId);
-    		review.setContent(newContent);
-        	review.setRating(newRating);
-        	return reviewRepository.save(review); 
+    @Transactional
+    public void updateReview(ReviewEditForm reviewEditForm, Review review) {
+        review.setRating(reviewEditForm.getRating());
+        review.setContent(reviewEditForm.getContent());
+
+        reviewRepository.save(review);
     }
  
-    public void deleteReview(Integer id) {
-    	reviewRepository.deleteById(id);
+    public void deleteReview(Review review) {
+    	reviewRepository.delete(review);
     }
     
     public boolean hasUserAlreadyReviewed(House house, User user) {
-    	Review review = reviewRepository.findByHouseAndUser(house, user); {
-    		if(review == null) {
-    			return false;
-    		} else {
-    			return true;
-    		}
-    	}
-    }
-    
-    //指定した民宿に関連するレビューが存在するか
-    public boolean existsReviewsForHouse(House house) {
-    	return reviewRepository.existsByHouse(house);
+    	return reviewRepository.existsByHouseAndUser(house, user);
     }
    
-
 }

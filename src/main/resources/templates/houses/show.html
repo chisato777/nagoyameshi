@@ -142,51 +142,64 @@
 								</div>
 
 								<div sec:authorize="isAuthenticated()" class="col-lg-4 px-0 ps-lg-4 mb-4">
-									<div class="card">
-										<div class="card-body">
-											<form method="get"
-												th:action="@{/houses/__${house.getId()}__/reservations/input}"
-												th:object="${reservationInputForm}">
+									<!-- 有料会員向けの表示 -->
+									<th:block sec:authorize="hasRole('ROLE_PAID_MEMBER')">
+										<div class="card">
+											<div class="card-body">
+												<form method="get"
+													th:action="@{/houses/__${house.getId()}__/reservations/input}"
+													th:object="${reservationInputForm}">
 
-												<!-- 来店日 -->
-												<div class="form-group mb-2">
-													<label for="visitDate"
-														class="col-form-label text-md-left fw-bold">来店日</label>
-													<div th:if="${#fields.hasErrors('visitDate')}"
-														class="text-danger small mb-2"
-														th:errors="*{fromCheckinDateToCheckoutDate}"></div>
-													<input type="text" class="form-control" th:field="*{visitDate}">
-												</div>
-
-												<!-- 時間 -->
-												<div class="form-group mb-2">
-													<label for="visitTime"
-														class="col-form-label text-md-left fw-bold">時間</label>
-													<div th:if="${#fields.hasErrors('visitTime')}"
-														class="text-danger small mb-2" th:errors="*{visitTime}">
+													<!-- 来店日 -->
+													<div class="form-group mb-2">
+														<label for="visitDate"
+															class="col-form-label text-md-left fw-bold">来店日</label>
+														<div th:if="${#fields.hasErrors('visitDate')}"
+															class="text-danger small mb-2"
+															th:errors="*{fromCheckinDateToCheckoutDate}"></div>
+														<input type="text" class="form-control" th:field="*{visitDate}">
 													</div>
-													<input type="text" class="form-control" id="visitTime"
-														th:field="*{visitTime}">
-												</div>
 
-												<!-- 人数 -->
-												<div class="form-group mb-4">
-													<label for="numberOfPeople"
-														class="col-form-label text-md-left fw-bold">人数</label>
-													<div th:if="${#fields.hasErrors('numberOfPeople')}"
-														class="text-danger small mb-2" th:errors="*{numberOfPeople}">
+													<!-- 時間 -->
+													<div class="form-group mb-2">
+														<label for="visitTime"
+															class="col-form-label text-md-left fw-bold">時間</label>
+														<div th:if="${#fields.hasErrors('visitTime')}"
+															class="text-danger small mb-2" th:errors="*{visitTime}">
+														</div>
+														<input type="text" class="form-control" id="visitTime"
+															th:field="*{visitTime}">
 													</div>
-													<input type="number" class="form-control"
-														th:field="*{numberOfPeople}" min="1">
-												</div>
 
-												<div class="form-group">
-													<button type="submit"
-														class="btn text-white shadow-sm w-100 samuraitravel-btn">予約する</button>
-												</div>
-											</form>
+													<!-- 人数 -->
+													<div class="form-group mb-4">
+														<label for="numberOfPeople"
+															class="col-form-label text-md-left fw-bold">人数</label>
+														<div th:if="${#fields.hasErrors('numberOfPeople')}"
+															class="text-danger small mb-2"
+															th:errors="*{numberOfPeople}">
+														</div>
+														<input type="number" class="form-control"
+															th:field="*{numberOfPeople}" min="1">
+													</div>
+
+													<div class="form-group">
+														<button type="submit"
+															class="btn text-white shadow-sm w-100 samuraitravel-btn">予約する</button>
+													</div>
+												</form>
+											</div>
 										</div>
-									</div>
+									</th:block>
+									<!-- 無料会員向けの表示 -->
+									<th:block sec:authorize="hasRole('ROLE_FREE_MEMBER')">
+										<div class="text-center">
+											<a th:href="@{/subscription/register}"
+												class="btn btn-warning shadow-sm w-50">
+												有料プランに登録して予約する
+											</a>
+										</div>
+									</th:block>
 								</div>
 								<th:block sec:authorize="isAnonymous()">
 									<!-- 未ログインユーザー用の案内リンク -->
@@ -217,7 +230,7 @@
 									<th:block sec:authorize="hasRole('ROLE_FREE_MEMBER')">
 										<div class="text-center">
 											<a th:href="@{/subscription/register}"
-												class="btn btn-warning shadow-sm w-50">
+												class="btn btn-warning shadow-sm w-30">
 												有料プランに登録してお気に入りを利用
 											</a>
 										</div>
@@ -226,8 +239,30 @@
 							</div>
 							<div class="d-flex align-items-center mt-4">
 								<h2 class="fw-bold mt-4 me-3">レビュー</h2>
-								<a th:href="@{/houses/{houseId}/reviews/register(houseId=${house.id})}"
-									class="btn text-white shadow-sm samuraitravel-btn">投稿する</a>
+								<th:block sec:authorize="isAuthenticated()">
+									<!-- 有料会員向けの表示 -->
+									<th:block sec:authorize="hasRole('ROLE_PAID_MEMBER')">
+										<!-- 投稿済みの場合 -->
+										<th:block th:if="${hasUserAlreadyReviewed}">
+											<button class="btn btn-secondary shadow-sm samuraitravel-btn"
+												disabled>投稿済み</button>
+										</th:block>
+										<!-- 投稿していない場合 -->
+										<th:block th:if="${!hasUserAlreadyReviewed}">
+											<a th:href="@{/houses/{houseId}/reviews/register(houseId=${house.id})}"
+												class="btn text-white shadow-sm samuraitravel-btn">投稿する</a>
+										</th:block>
+
+										<!-- 無料会員向けの表示 -->
+										<th:block sec:authorize="hasRole('ROLE_FREE_MEMBER')">
+											<div class="text-center">
+												<a th:href="@{/subscription/register}"
+													class="btn btn-warning shadow-sm w-100">
+													有料プランに登録してレビューを投稿
+												</a>
+											</div>
+										</th:block>
+									</th:block>
 							</div>
 							<div th:if="${#lists.isEmpty(reviews)}">
 								<p>まだレビューがありません。</p>
@@ -236,6 +271,13 @@
 								class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 								<div th:each="review : ${reviews}" class="col">
 									<div class="card h-100">
+										<div th:if="${#authentication.principal?.user?.id == review.user.id}"
+											style="position: absolute; top: 0.5rem; right: 0.5rem;">
+											<a th:href="@{/houses/{houseId}/reviews/{reviewId}/edit(houseId=${house.id}, reviewId=${review.id})}"
+												class="me-2 text-primary" style="font-size: 0.9rem;">編集</a>
+											<a th:href="@{/houses/{houseId}/reviews/{reviewId}/delete(houseId=${house.id}, reviewId=${review.id})}"
+												class="text-secondary" style="font-size: 0.9rem;">削除</a>
+										</div>
 										<div class="card-body">
 											<h5 class="card-title" th:text="${review.user.name}"></h5>
 											<p class="card-subtitle mb-2 text-muted"

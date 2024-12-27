@@ -91,7 +91,7 @@ public class HouseController {
 		House house = houseRepository.getReferenceById(id);
 
 		if (house == null) {
-			model.addAttribute("errorMessage", "民宿が存在しません。");
+			model.addAttribute("errorMessage", "店舗が存在しません。");
 			return "redirect:/houses/index";
 		}
 

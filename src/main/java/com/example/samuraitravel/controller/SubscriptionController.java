@@ -106,7 +106,7 @@ public class SubscriptionController {
     }
 
     @PostMapping("/update")
-    public String update(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, @RequestParam String paymentMethodId, RedirectAttributes redirectAttributes) {
+    public String update(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, @RequestParam String paymentMethodId,RedirectAttributes redirectAttributes) {
         User user = userDetailsImpl.getUser();
         String stripeCustomerId = user.getStripeCustomerId();
 
