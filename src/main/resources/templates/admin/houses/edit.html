@@ -58,11 +58,11 @@
 									<label for="category" class="col-form-label text-md-left fw-bold">カテゴリー</label>
 								</div>
 								<div class="col-md-8">
-									<div th:if="${#fields.hasErrors('category')}" class="text-danger small mb-2"
-										th:errors="*{category}"></div>
-									<select class="form-control form-select" th:field="*{category}">
+									<div th:if="${#fields.hasErrors('categoryId')}" class="text-danger small mb-2"
+										th:errors="*{categoryId}"></div>
+									<select class="form-control form-select" th:field="*{categoryId}">
 										<option value="" hidden>カテゴリーを選択してください</option>
-										<option th:each="category : ${categories}" th:value="${category}" th:text="${category}">
+										<option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">
 										</option>
 									</select>
 								</div>

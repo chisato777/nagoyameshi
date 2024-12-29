@@ -63,7 +63,7 @@
 										th:errors="*{categoryId}"></div>
 									<select class="form-control form-select" th:field="*{categoryId}">
 										<option value="" hidden>カテゴリーを選択してください</option>
-										<option th:each="categoryId : ${categories}" th:value="${categoryId}" th:text="${categoryId.name}">
+										<option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">
 										</option>
 									</select>
 								</div>

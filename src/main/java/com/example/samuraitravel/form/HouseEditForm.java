@@ -19,7 +19,7 @@ public class HouseEditForm {
         
     private MultipartFile imageFile;
     
-    @NotBlank(message = "カテゴリーを選択してください。")
+    @NotNull(message = "カテゴリーを選択してください。")
     private Integer categoryId;
     
     @NotBlank(message = "説明を入力してください。")
